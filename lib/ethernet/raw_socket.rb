@@ -1,17 +1,12 @@
-# Copied from github.com/pwnall/ether_shell/lib/ether_shell/raw_socket.rb
-# Basically the same to scratchpad's raw_ethernet
-#   here and ether_shell = scratchpad's equivalent
-#   eth_device = if_name
-#   set_socket_eth_device() = set_socket_interface()
-#   self.mac() = self.get_interface_mac()
-
 require 'socket'
+
 case RUBY_PLATFORM
-  when /linux/
-    require 'system/getifaddrs' # for listing
+when /linux/
+  require 'system/getifaddrs' # for listing
 end
+
 # :nodoc: namespace
-module Ethernet # changed from EtherShell
+module Ethernet
 
 # Low-level socket creation functionality.
 module RawSocket
@@ -158,8 +153,8 @@ module RawSocket
     end
     private :htons
   end
-end # module Ethernet::RawSocket
+end  # module Ethernet::RawSocket
 
-end # namespace Ethernet
+end  # namespace Ethernet
 
 

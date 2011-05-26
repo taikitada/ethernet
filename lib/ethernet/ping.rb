@@ -1,3 +1,6 @@
+# TODO(pwnall): move to separate gem
+
+
 # copied from victor's scratchpad/lib/scratchpad/ethernet/ping.rb
 # changes see raw_socket.rb
 # :%s/if_name/eth_device/g
@@ -84,5 +87,3 @@ class PingClient
 end  # module Ethernet::PingClient
 
 end  # namespace Ethernet
-
-# end  # namespace Scratchpad

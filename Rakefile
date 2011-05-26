@@ -13,16 +13,13 @@ require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name = "ethernet"
-  gem.homepage = "http://github.com/haoqili/ethernet"
+  gem.homepage = "http://github.com/costan/ethernet"
   gem.license = "MIT"
-  gem.summary = %Q{A ruby gem library for ethernet communication.}
-  gem.description = %Q{This project is a low-level ethernet communication rubygems library.}
-  gem.email = "haoqili@mit.edu"
-  gem.authors = ["HaoQi Li"]
-  # Include your dependencies below. Runtime dependencies are required when using your gem,
-  # and development dependencies are only needed for development (ie running rake tasks, tests, etc)
-  #  gem.add_runtime_dependency 'jabber4r', '> 0.1'
-  #  gem.add_development_dependency 'rspec', '> 1.2.3'
+  gem.summary = %Q{Ethernet (link-layer level) sockets.}
+  gem.description = %Q{Provides a Socket-like API that bypasses TCP/IP. Useful for exotic devices and FPGA development.}
+  gem.email = "victor@costan.us"
+  gem.authors = ["Victor Costan", "HaoQi Li"]
+  # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
 

@@ -9,6 +9,7 @@ GEM
       rake
     rake (0.9.0)
     rcov (0.9.9)
+    rdoc (3.6.1)
     rspec (2.6.0)
       rspec-core (~> 2.6.0)
       rspec-expectations (~> 2.6.0)
@@ -26,5 +27,6 @@ DEPENDENCIES
   bundler (~> 1.0.0)
   jeweler (~> 1.6.0)
   rcov
+  rdoc (~> 3.6.1)
   rspec (~> 2.6.0)
   system-getifaddrs (~> 0.1.1)

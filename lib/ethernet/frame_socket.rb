@@ -1,27 +1,25 @@
-# copied from github.com/pwnall/ether_shell/lib/ether_shell/high_socket.rb
-
 # :nodoc: namespace
 module Ethernet
 
 # Wraps an Ethernet socket and abstracts away the Ethernet II frame.
-class SocketWrapper
+class FrameSocket
   # Creates a wrapper around a raw Ethernet socket.
   #
   # Args:
-  # raw_socket_or_device:: a raw Ethernet socket or a string containing an
-  # Ethernet device name
-  # ether_type:: 2-byte Ethernet packet type number
-  # mac_address:: 6-byte MAC address for the Ethernet socket (optional if
-  # raw_socket_or_device is an Ethernet device name)
+  #   raw_socket_or_device:: a raw Ethernet socket or a string containing an
+  #                          Ethernet device name
+  #   ether_type:: 2-byte Ethernet packet type number
+  #   mac_address:: 6-byte MAC address for the Ethernet socket (optional if
+  #                 raw_socket_or_device is an Ethernet device name)
   #
   # Raises:
-  # RuntimeError:: if mac isn't exactly 6-bytes long
+  #   RuntimeError:: if mac isn't exactly 6-bytes long
   def initialize(raw_socket_or_device, ether_type, mac_address = nil)
     check_mac mac_address if mac_address
     
     if raw_socket_or_device.respond_to? :to_str
-      @source_mac = mac_address || RawSocket.mac(raw_socket_or_device)
-      @socket = RawSocket.socket raw_socket_or_device, ether_type
+      @source_mac = mac_address || Ethernet::Devices.mac(raw_socket_or_device)
+      @socket = RawSocketFactory.socket raw_socket_or_device, ether_type
     else
       raise 'MAC address needed with raw socket' unless mac_address
       @source_mac = mac_address.dup
@@ -35,10 +33,10 @@ class SocketWrapper
   # Sets the destination MAC address for future calls to send.
   #
   # Args:
-  # mac:: 6-byte MAC address for the Ethernet socket
+  #   mac:: 6-byte MAC address for the Ethernet socket
   #
   # Raises:
-  # RuntimeError:: if mac isn't exactly 6-bytes long
+  #   RuntimeError:: if mac isn't exactly 6-bytes long
   def connect(mac_address)
     check_mac mac_address
     @dest_mac = mac_address
@@ -52,10 +50,10 @@ class SocketWrapper
   # Sends an Ethernet II frame.
   #
   # Args:
-  # data:: the data bytes to be sent
+  #   data:: the data bytes to be sent
   #
   # Raises:
-  # RuntimeError:: if connect wasn' previously called
+  #   RuntimeError:: if connect wasn' previously called
   def send(data, send_flags = 0)
     raise "Not connected" unless @dest_mac
     send_to @dest_mac, data, send_flags
@@ -64,11 +62,11 @@ class SocketWrapper
   # Sends an Ethernet II frame.
   #
   # Args:
-  # mac_address:: the destination MAC address
-  # data:: the data bytes to be sent
+  #   mac_address:: the destination MAC address
+  #   data:: the data bytes to be sent
   #
   # Raises:
-  # RuntimeError:: if connect wasn' previously called
+  #   RuntimeError:: if connect wasn' previously called
   def send_to(mac_address, data, send_flags = 0)
     check_mac mac_address
 
@@ -80,8 +78,8 @@ class SocketWrapper
   # Receives an Ethernet II frame.
   #
   # Args:
-  # buffer_size:: optional maximum packet size argument passed to the raw
-  # socket's recv method
+  #   buffer_size:: optional maximum packet size argument passed to the raw
+  #                 socket's recv method
   #
   # Returns the data and the source MAC address in the frame.
   #
@@ -98,8 +96,8 @@ class SocketWrapper
   # Receives an Ethernet II frame.
   #
   # Args:
-  # buffer_size:: optional maximum packet size argument passed to the raw
-  # socket's recv method
+  #   buffer_size:: optional maximum packet size argument passed to the raw
+  #                 socket's recv method
   #
   # Returns the data in the frame.
   #
@@ -119,6 +117,6 @@ class SocketWrapper
     raise "Invalid MAC address" unless mac_address.length == 6
   end
   private :check_mac
-end  # class Ethernet::SocketWrapper
+end  # class Ethernet::FrameSocket
 
 end  # namespace Ethernet

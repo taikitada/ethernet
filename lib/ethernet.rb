@@ -42,7 +42,3 @@ require 'ethernet/devices.rb'
 require 'ethernet/frame_socket.rb'
 require 'ethernet/provisioning.rb'
 require 'ethernet/raw_socket_factory.rb'
-
-
-# TODO(pwnall): move to separate gem
-require 'ethernet/ping.rb'

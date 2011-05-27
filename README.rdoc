@@ -16,10 +16,10 @@ This project is a low-level ethernet communication rubygems library. Its initial
 
 == Author
 
+Victor Costan victor@costan.us
 HaoQi Li haoqili@mit.edu
 
 == Copyright
 
 Copyright (c) 2011 Massachusetts Institute of Technology. 
 See LICENSE.txt for further details.
-

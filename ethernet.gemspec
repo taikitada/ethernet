@@ -5,19 +5,21 @@
 
 Gem::Specification.new do |s|
   s.name = %q{ethernet}
-  s.version = "0.0.0"
+  s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["HaoQi Li"]
-  s.date = %q{2011-03-11}
-  s.description = %q{This project is a low-level ethernet communication rubygems library.}
-  s.email = %q{haoqili@mit.edu}
+  s.authors = [%q{Victor Costan}, %q{HaoQi Li}]
+  s.date = %q{2011-05-27}
+  s.description = %q{Provides a Socket-like API that bypasses TCP/IP. Useful for exotic devices and FPGA development.}
+  s.email = %q{victor@costan.us}
+  s.executables = [%q{ethernet_ping}]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc"
   ]
   s.files = [
     ".document",
+    ".project",
     ".rspec",
     "Gemfile",
     "Gemfile.lock",
@@ -25,39 +27,52 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION",
+    "bin/ethernet_ping",
     "ethernet.gemspec",
     "lib/ethernet.rb",
+    "lib/ethernet/devices.rb",
+    "lib/ethernet/frame_socket.rb",
+    "lib/ethernet/ping.rb",
+    "lib/ethernet/provisioning.rb",
+    "lib/ethernet/raw_socket_factory.rb",
+    "spec/ethernet/devices_spec.rb",
+    "spec/ethernet/frame_socket_spec.rb",
+    "spec/ethernet/raw_socket_factory_spec.rb",
     "spec/ethernet_spec.rb",
-    "spec/spec_helper.rb"
+    "spec/spec_helper.rb",
+    "spec/support/ifconfig_cli.rb",
+    "spec/support/raw_socket_stub.rb"
   ]
-  s.homepage = %q{http://github.com/haoqili/ethernet}
-  s.licenses = ["MIT"]
-  s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.6.2}
-  s.summary = %q{A ruby gem library for ethernet communication.}
-  s.test_files = [
-    "spec/ethernet_spec.rb",
-    "spec/spec_helper.rb"
-  ]
+  s.homepage = %q{http://github.com/costan/ethernet}
+  s.licenses = [%q{MIT}]
+  s.require_paths = [%q{lib}]
+  s.rubygems_version = %q{1.8.4}
+  s.summary = %q{Ethernet (link-layer level) sockets.}
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_development_dependency(%q<rspec>, ["~> 2.3.0"])
+      s.add_runtime_dependency(%q<system-getifaddrs>, ["~> 0.1.1"])
+      s.add_development_dependency(%q<rdoc>, ["~> 3.6.1"])
+      s.add_development_dependency(%q<rspec>, ["~> 2.6.0"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
-      s.add_development_dependency(%q<jeweler>, ["~> 1.5.2"])
+      s.add_development_dependency(%q<jeweler>, ["~> 1.6.0"])
       s.add_development_dependency(%q<rcov>, [">= 0"])
     else
-      s.add_dependency(%q<rspec>, ["~> 2.3.0"])
+      s.add_dependency(%q<system-getifaddrs>, ["~> 0.1.1"])
+      s.add_dependency(%q<rdoc>, ["~> 3.6.1"])
+      s.add_dependency(%q<rspec>, ["~> 2.6.0"])
       s.add_dependency(%q<bundler>, ["~> 1.0.0"])
-      s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
+      s.add_dependency(%q<jeweler>, ["~> 1.6.0"])
       s.add_dependency(%q<rcov>, [">= 0"])
     end
   else
-    s.add_dependency(%q<rspec>, ["~> 2.3.0"])
+    s.add_dependency(%q<system-getifaddrs>, ["~> 0.1.1"])
+    s.add_dependency(%q<rdoc>, ["~> 3.6.1"])
+    s.add_dependency(%q<rspec>, ["~> 2.6.0"])
     s.add_dependency(%q<bundler>, ["~> 1.0.0"])
-    s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
+    s.add_dependency(%q<jeweler>, ["~> 1.6.0"])
     s.add_dependency(%q<rcov>, [">= 0"])
   end
 end

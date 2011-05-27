@@ -7,7 +7,7 @@ module IfconfigCli
     else
       output = `ifconfig -a`
       info_blocks = output.split /\n(?=\w)/ 
-      Hash[info_blocks.map { |i|
+      devices = Hash[info_blocks.map { |i|
         name = i.split(' ', 2).first
         mac = if match = /hwaddr\s([0-9a-f:]+)\s/i.match(i)
           # Linux ifconfig output.
@@ -25,6 +25,7 @@ module IfconfigCli
         [name, { :mac => mac, :active => active }]
       }]
     end
+    devices.delete_if { |k, v| v[:mac].nil? }
   end
   
   # The name of the first active Ethernet device.

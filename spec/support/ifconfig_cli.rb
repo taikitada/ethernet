@@ -1,14 +1,25 @@
+require 'English'
+
 # Wraps ifconfig calls useful for testing.
 module IfconfigCli
   # Runs ifconfig and parses its output.
   def self.run
-    case RUBY_PLATFORM
-    when /win/
-    else
+    output = nil
+    windows = false
+    begin
       output = `ifconfig -a`
+    rescue Errno::ENOENT
+      output = `ipconfig /a`
+      windows = true
+    end
+    
+    if windows
+      raise 'Windows support not yet implemented'
+    else
       info_blocks = output.split /\n(?=\w)/ 
       devices = Hash[info_blocks.map { |i|
         name = i.split(' ', 2).first
+        name = name[0...-1] if name[-1, 1] == ':'  # OSX
         mac = if match = /hwaddr\s([0-9a-f:]+)\s/i.match(i)
           # Linux ifconfig output.
           match[1].gsub(':', '').downcase
@@ -21,7 +32,7 @@ module IfconfigCli
         else
           nil
         end
-        active = /inet\s/.match(i) ? true : false
+        active = (/inet\s/i.match(i) || /inet6\s/i.match(i)) ? true : false
         [name, { :mac => mac, :active => active }]
       }]
     end

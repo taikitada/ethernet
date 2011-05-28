@@ -16,10 +16,20 @@ module RawSocketFactory
   #   eth_device:: device name for the Ethernet card, e.g. 'eth0'
   #   ether_type:: only receive Ethernet frames with this protocol number
   def self.socket(eth_device = nil, ether_type = nil)
-    ether_type ||= all_ethernet_protocols
-    socket = Socket.new raw_address_family, Socket::SOCK_RAW, htons(ether_type)
-    socket.setsockopt Socket::SOL_SOCKET, Socket::SO_BROADCAST, true
-    set_socket_eth_device(socket, eth_device, ether_type) if eth_device
+    case RUBY_PLATFORM
+    when /linux/
+      ether_type ||= all_ethernet_protocols
+      socket = Socket.new raw_address_family, Socket::SOCK_RAW,
+                          htons(ether_type)
+      socket.setsockopt Socket::SOL_SOCKET, Socket::SO_BROADCAST, true
+      set_socket_eth_device(socket, eth_device, ether_type) if eth_device
+    when /darwin/
+      socket = Socket.new raw_address_family, Socket::SOCK_RAW, 0
+      socket.setsockopt Socket::SOL_SOCKET, Socket::SO_BROADCAST, true
+      set_socket_eth_device(socket, eth_device, ether_type) if eth_device
+    else
+      raise "Unsupported platform #{RUBY_PLATFORM}"
+    end
     socket
   end
   
@@ -33,6 +43,11 @@ module RawSocketFactory
         socket_address = [raw_address_family, htons(ether_type), if_number,
                           0xFFFF, 0, 0, ""].pack 'SSISCCa8'
         socket.bind socket_address
+      when /darwin/
+        # struct sockaddr_ndrv in /usr/include/net/ndrv.h
+        # IFNAMSIZ -> IF_NAMESIZE defined in /usr/include/net/if.h
+        socket_address = [raw_address_family, eth_device].pack('Ca16')
+        socket.bind socket_address
       else
         raise "Unsupported platform #{RUBY_PLATFORM}"
       end
@@ -43,7 +58,7 @@ module RawSocketFactory
     # The interface number for an Ethernet interface.
     def get_interface_number(eth_device)
       case RUBY_PLATFORM
-      when /linux/
+      when /linux/, /darwin/
         # /usr/include/net/if.h, structure ifreq
         ifreq = [eth_device].pack 'a32'
         # 0x8933 is SIOCGIFINDEX in /usr/include/bits/ioctls.h
@@ -58,7 +73,7 @@ module RawSocketFactory
     # The protocol number for listening to all ethernet protocols.
     def all_ethernet_protocols
       case RUBY_PLATFORM
-      when /linux/
+      when /linux/, /darwin/
         3  # cat /usr/include/linux/if_ether.h | grep ETH_P_ALL
       else
         raise "Unsupported platform #{RUBY_PLATFORM}"
@@ -72,12 +87,11 @@ module RawSocketFactory
       when /linux/
         17  # cat /usr/include/bits/socket.h | grep PF_PACKET
       when /darwin/
-        18  # cat /usr/include/sys/socket.h | grep AF_LINK
+        27  # cat /usr/include/sys/socket.h | grep AF_NDRV
       else
         raise "Unsupported platform #{RUBY_PLATFORM}"
       end
     end
-    private :raw_address_family
   
     # Converts a 16-bit integer from host-order to network-order.
     def htons(short_integer)

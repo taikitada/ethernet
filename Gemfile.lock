@@ -2,6 +2,7 @@ GEM
   remote: http://rubygems.org/
   specs:
     diff-lcs (1.1.2)
+    ffi (1.0.9)
     git (1.2.5)
     jeweler (1.6.0)
       bundler (~> 1.0.0)
@@ -25,6 +26,7 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.0.0)
+  ffi (>= 1.0.0)
   jeweler (~> 1.6.0)
   rcov
   rdoc (>= 3.6.1)

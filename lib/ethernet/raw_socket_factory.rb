@@ -20,7 +20,6 @@ module RawSocketFactory
       set_socket_eth_device(socket, eth_device, ether_type) if eth_device
     when /darwin/
       socket = Socket.new raw_address_family, Socket::SOCK_RAW, 0
-      socket.setsockopt Socket::SOL_SOCKET, Socket::SO_BROADCAST, true
       set_socket_eth_device(socket, eth_device, ether_type) if eth_device
     else
       raise "Unsupported platform #{RUBY_PLATFORM}"
@@ -43,6 +42,13 @@ module RawSocketFactory
         # IFNAMSIZ -> IF_NAMESIZE defined in /usr/include/net/if.h
         socket_address = [raw_address_family, eth_device].pack('Ca16')
         socket.bind socket_address
+        
+        so_level = 0  # SOL_NDRVPROTO in /usr/include/net/ndrv.h
+        so_option = 4  # NDRV_SETDMXSPEC in /usr/include/net/ndrv.h
+        # struct ndrv_demux_desc in /usr/include/net/ndrv.h
+        # NDRV_DEMUXTYPE_ETHERTYPE -> 4 in /usr/include/net/ndrv.h
+        demux_desc = [4, 2, htons(ether_type), ""].pack('SSSa26')
+        socket.setsockopt so_level, so_option, demux_desc
       else
         raise "Unsupported platform #{RUBY_PLATFORM}"
       end

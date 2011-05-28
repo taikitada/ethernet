@@ -33,7 +33,7 @@ module RawSocketFactory
     def set_socket_eth_device(socket, eth_device, ether_type)
       case RUBY_PLATFORM
       when /linux/
-        if_number = get_interface_number eth_device
+        if_number = Ethernet::Device.interface_index eth_device
         # struct sockaddr_ll in /usr/include/linux/if_packet.h
         socket_address = [raw_address_family, htons(ether_type), if_number,
                           0xFFFF, 0, 0, ""].pack 'SSISCCa8'
@@ -49,21 +49,6 @@ module RawSocketFactory
       socket
     end
     private :set_socket_eth_device
-    
-    # The interface number for an Ethernet interface.
-    def get_interface_number(eth_device)
-      case RUBY_PLATFORM
-      when /linux/, /darwin/
-        # /usr/include/net/if.h, structure ifreq
-        ifreq = [eth_device].pack 'a32'
-        # 0x8933 is SIOCGIFINDEX in /usr/include/bits/ioctls.h
-        socket.ioctl 0x8933, ifreq
-        ifreq[16, 4].unpack('I').first
-      else
-        raise "Unsupported platform #{RUBY_PLATFORM}"
-      end
-    end
-    private :get_interface_number
     
     # The protocol number for listening to all ethernet protocols.
     def all_ethernet_protocols

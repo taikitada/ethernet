@@ -29,6 +29,22 @@ module Devices
     end
   end
   
+  # The interface number for an Ethernet interface.
+  def self.interface_index(device)
+    case RUBY_PLATFORM
+    when /linux/
+      # /usr/include/net/if.h, structure ifreq
+      ifreq = [eth_device].pack 'a32'
+      # 0x8933 is SIOCGIFINDEX in /usr/include/bits/ioctls.h
+      socket.ioctl 0x8933, ifreq
+      ifreq[16, 4].unpack('I').first
+    when /darwin/
+      info[eth_device][:index]
+    else
+      raise "Unsupported platform #{RUBY_PLATFORM}"
+    end
+  end
+  
   # Hash mapping device names to information about devices.
   def self.info
     case RUBY_PLATFORM
@@ -79,6 +95,16 @@ module Devices
         
         offset += 16 + addr_length
       end
+      
+      if /linux/ =~ RUBY_PLATFORM
+        # Linux only provides IP addresses in SIOCGIFCONF.
+        devices.keys.each do |device|
+          devices[device][:mac] ||= mac(device)
+          devices[device][:index] ||= mac(device)
+        end
+      end
+      devices.delete_if { |k, v| v[:mac].nil? || v[:mac].empty? }
+      
       devices
     else
       raise "Unsupported platform #{RUBY_PLATFORM}"

@@ -1,10 +1,5 @@
 require 'socket'
 
-case RUBY_PLATFORM
-when /linux/
-  require 'system/getifaddrs' # for listing
-end
-
 # :nodoc: namespace
 module Ethernet
 

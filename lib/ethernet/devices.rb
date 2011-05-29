@@ -20,7 +20,7 @@ module Devices
       # structure ifreq in /usr/include/net/if.h
       ifreq = [eth_device].pack 'a32'
       # 0x8927 is SIOCGIFHWADDR in /usr/include/bits/ioctls.h
-      RawSocketFactory.socket.ioctl 0x8927, ifreq
+      ioctls_socket.ioctl 0x8927, ifreq
       ifreq[18, 6]
     when /darwin/
       info[eth_device][:mac]
@@ -30,13 +30,16 @@ module Devices
   end
   
   # The interface number for an Ethernet interface.
-  def self.interface_index(device)
+  #
+  # Args:
+  #   eth_device:: device name for the Ethernet card, e.g. 'eth0'
+  def self.interface_index(eth_device)
     case RUBY_PLATFORM
     when /linux/
       # /usr/include/net/if.h, structure ifreq
       ifreq = [eth_device].pack 'a32'
       # 0x8933 is SIOCGIFINDEX in /usr/include/bits/ioctls.h
-      socket.ioctl 0x8933, ifreq
+      ioctls_socket.ioctl 0x8933, ifreq
       ifreq[16, 4].unpack('I').first
     when /darwin/
       info[eth_device][:index]
@@ -99,8 +102,8 @@ module Devices
       if /linux/ =~ RUBY_PLATFORM
         # Linux only provides IP addresses in SIOCGIFCONF.
         devices.keys.each do |device|
-          devices[device][:mac] ||= mac(device)
-          devices[device][:index] ||= mac(device)
+          devices[device][:mac] ||= mac device
+          devices[device][:index] ||= interface_index device
         end
       end
       devices.delete_if { |k, v| v[:mac].nil? || v[:mac].empty? }
@@ -121,6 +124,11 @@ module Devices
     else
       raise "Unsupported platform #{RUBY_PLATFORM}"
     end
+  end
+  
+  # Socket that is solely used for issuing ioctls.
+  def self.ioctls_socket
+    Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
   end
 end  # class Ethernet::Devices
 

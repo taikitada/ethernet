@@ -19,7 +19,9 @@ module RawSocketFactory
       socket.setsockopt Socket::SOL_SOCKET, Socket::SO_BROADCAST, true
       set_socket_eth_device(socket, eth_device, ether_type) if eth_device
     when /darwin/
+      ether_type ||= all_ethernet_protocols
       socket = Socket.new raw_address_family, Socket::SOCK_RAW, 0
+      socket.setsockopt Socket::SOL_SOCKET, Socket::SO_BROADCAST, true
       set_socket_eth_device(socket, eth_device, ether_type) if eth_device
     else
       raise "Unsupported platform #{RUBY_PLATFORM}"
@@ -40,15 +42,24 @@ module RawSocketFactory
       when /darwin/
         # struct sockaddr_ndrv in /usr/include/net/ndrv.h
         # IFNAMSIZ -> IF_NAMESIZE defined in /usr/include/net/if.h
-        socket_address = [raw_address_family, eth_device].pack('Ca16')
+        socket_address = [raw_address_family, eth_device].pack('Sa16')
         socket.bind socket_address
         
-        so_level = 0  # SOL_NDRVPROTO in /usr/include/net/ndrv.h
-        so_option = 4  # NDRV_SETDMXSPEC in /usr/include/net/ndrv.h
+        so_level = 0  # cat /usr/include/net/ndrv.h | grep SOL_NDRVPROTO
+        so_option = 4  # cat /usr/include/net/ndrv.h | grep NDRV_SETDMXSPEC
         # struct ndrv_demux_desc in /usr/include/net/ndrv.h
-        # NDRV_DEMUXTYPE_ETHERTYPE -> 4 in /usr/include/net/ndrv.h
+        # cat /usr/include/net/ndrv.h | grep NDRV_DEMUXTYPE_ETHERTYPE
         demux_desc = [4, 2, htons(ether_type), ""].pack('SSSa26')
-        socket.setsockopt so_level, so_option, demux_desc
+        # struct ndrv_protocol_desc in /usr/include/net/ndrv.h
+        demux_desc_ptr = FFI::MemoryPointer.new :char, demux_desc.length + 1
+        demux_desc_ptr.write_string demux_desc
+        if FFI::Pointer.size == 8
+          pack_spec = 'LLLQ'
+        else
+          pack_spec = 'LLLL'
+        end
+        ndrv_desc = [1, 2, 1, demux_desc_ptr.address].pack pack_spec
+        socket.setsockopt so_level, so_option, ndrv_desc
       else
         raise "Unsupported platform #{RUBY_PLATFORM}"
       end
@@ -59,8 +70,10 @@ module RawSocketFactory
     # The protocol number for listening to all ethernet protocols.
     def all_ethernet_protocols
       case RUBY_PLATFORM
-      when /linux/, /darwin/
+      when /linux/
         3  # cat /usr/include/linux/if_ether.h | grep ETH_P_ALL
+      when /darwin/
+        0x86a0  # HACK
       else
         raise "Unsupported platform #{RUBY_PLATFORM}"
       end

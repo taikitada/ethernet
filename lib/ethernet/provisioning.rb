@@ -6,6 +6,11 @@ module Ethernet
 
 # Setup issues such as assigning permissions for Ethernet-level transmission.
 module Provisioning
+  @platform = Config::CONFIG['target_os']
+  def self.platform
+    @platform
+  end
+  
   # Allow non-root users to create low-level Ethernet sockets.
   #
   # This is a security risk, because Ethernet sockets can be used to spy on all
@@ -15,7 +20,7 @@ module Provisioning
   # Returns true for success, false otherwise. If the call fails, it is most
   # likely because it is not run by root / Administrator.
   def self.usermode_sockets
-    case RUBY_PLATFORM
+    case platform
     when /darwin/
       return false unless Kernel.system("chmod o+rw /dev/bpf*")
     when /linux/
@@ -35,7 +40,7 @@ module Provisioning
       # NOTE: this might not work
       return false unless Kernel.system("sc config npf start= auto")
     else
-      raise "Unsupported platform #{RUBY_PLATFORM}"
+      raise "Unsupported os #{Ethernet::Provisioning.platform}"
     end
     true
   end

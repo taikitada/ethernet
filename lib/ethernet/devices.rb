@@ -15,7 +15,7 @@ module Devices
   # Args:
   #   eth_device:: device name for the Ethernet card, e.g. 'eth0'
   def self.mac(eth_device)
-    case RUBY_PLATFORM
+    case Ethernet::Provisioning.platform
     when /linux/
       # structure ifreq in /usr/include/net/if.h
       ifreq = [eth_device].pack 'a32'
@@ -25,7 +25,7 @@ module Devices
     when /darwin/
       info[eth_device][:mac]
     else
-      raise "Unsupported platform #{RUBY_PLATFORM}"
+      raise "Unsupported os #{Ethernet::Provisioning.platform}"
     end
   end
   
@@ -34,7 +34,7 @@ module Devices
   # Args:
   #   eth_device:: device name for the Ethernet card, e.g. 'eth0'
   def self.interface_index(eth_device)
-    case RUBY_PLATFORM
+    case Ethernet::Provisioning.platform
     when /linux/
       # /usr/include/net/if.h, structure ifreq
       ifreq = [eth_device].pack 'a32'
@@ -44,15 +44,15 @@ module Devices
     when /darwin/
       info[eth_device][:index]
     else
-      raise "Unsupported platform #{RUBY_PLATFORM}"
+      raise "Unsupported os #{Ethernet::Provisioning.platform}"
     end
   end
   
   # Hash mapping device names to information about devices.
   def self.info
-    case RUBY_PLATFORM
+    case Ethernet::Provisioning.platform
     when /linux/, /darwin/
-      case RUBY_PLATFORM
+      case Ethernet::Provisioning.platform
       when /linux/
         # struct ifreq in /usr/include/net/if.h
         ifreq_size = FFI::Pointer.size == 8 ? 40 : 32
@@ -99,7 +99,7 @@ module Devices
         offset += 16 + addr_length
       end
       
-      if /linux/ =~ RUBY_PLATFORM
+      if /linux/ =~ Ethernet::Provisioning.platform
         # Linux only provides IP addresses in SIOCGIFCONF.
         devices.keys.each do |device|
           devices[device][:mac] ||= mac device
@@ -110,19 +110,19 @@ module Devices
       
       devices
     else
-      raise "Unsupported platform #{RUBY_PLATFORM}"
+      raise "Unsupported os #{Ethernet::Provisioning.platform}"
     end
   end
 
   # The link layer address number for raw sockets. 
   def self.ll_address_family
-    case RUBY_PLATFORM
+    case Ethernet::Provisioning.platform
     when /linux/
       16  # cat /usr/include/bits/socket.h | grep PF_NETLINK
     when /darwin/
       18  # cat /usr/include/sys/socket.h | grep AF_PACKET
     else
-      raise "Unsupported platform #{RUBY_PLATFORM}"
+      raise "Unsupported os #{Ethernet::Provisioning.platform}"
     end
   end
   

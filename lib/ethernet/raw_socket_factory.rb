@@ -182,21 +182,20 @@ module RawSocketFactory
     def initialize(bpf)
       @bpf = bpf
       @read_size = read_buffer_length
-      @read_buffer = "\0" * @read_size
       @queue = []
     end
     
     # Implements Socket#recv.
     def recv(buffer_size)
       while @queue.empty?
-        @bpf.sysread @read_size, @read_buffer
-        bytes_read = @read_buffer.length
+        read_buffer = @bpf.sysread @read_size
+        bytes_read = read_buffer.length
         offset = 0
         while offset < bytes_read
           # struct bpf_hdr in /usr/include/net/bpf.h
           timestamp, captured_size, original_size, header_size =
-              *@read_buffer.unpack('QLLS')
-          @queue.push @read_buffer[header_size, captured_size]
+              *read_buffer.unpack('QLLS')
+          @queue.push read_buffer[header_size, captured_size]
           # BPF_WORDALIGN in /usr/include/net/bpf.h
           offset += (header_size + captured_size + 3) & 0xFFF4
         end

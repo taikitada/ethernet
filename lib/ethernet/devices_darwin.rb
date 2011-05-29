@@ -5,7 +5,7 @@ module Ethernet
 module Devices
   # :nodoc: darwin implementation
   def self.ll_address_family
-    16  # cat /usr/include/bits/socket.h | grep PF_NETLINK
+    18  # cat /usr/include/sys/socket.h | grep AF_PACKET
   end
 
   # :nodoc: darwin implementation

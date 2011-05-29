@@ -4,6 +4,14 @@ A Ruby Gem Library for Ethernet Communication
 
 This project is a low-level ethernet communication rubygems library. Its initial intension is to set up a communication API between the FPGA chip and the server for MIT's Trusted Computing Secure Storage project http://projects.csail.mit.edu/tc/. 
 
+== Supported Platforms
+
+ethernet currently works on Linux and Mac OSX. It should work on other OSes that have kernel support for BPF (Berkely Packet Filter), with minor hacking.
+
+ethernet does not currently work on Windows, and is unlikely to do so in the near future. Microsoft, in its infinite wisdom, decided to remove low-level Ethernet support from Windows starting from XP SP2, so the gem would have to ship a pre-compiled miniport driver. Patches are welcome!
+
+ethernet is tested on MRI, but should run on all Ruby VMs that have FFI support, including JRuby and Rubinius. Please file bugs if that is not the case.
+
 == Contributing to ethernet
  
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet

@@ -107,7 +107,7 @@ module RawSocketFactory
       # struct bpf_program in /usr/include/net/bpf.h
       filter_code_ptr = FFI::MemoryPointer.new :char, filter_code.length + 1
       filter_code_ptr.write_string filter_code
-      if FFI::Pointer.size == 8
+      if Ethernet::Provisioning::POINTER_SIZE == 8
         pack_spec = 'QQ'
       else
         pack_spec = 'LL'

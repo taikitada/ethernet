@@ -6,10 +6,11 @@ module Ethernet
 
 # Setup issues such as assigning permissions for Ethernet-level transmission.
 module Provisioning
-  @platform = Config::CONFIG['target_os']
-  def self.platform
-    @platform
-  end
+  # The kernel that the VM is running on (e.g. "darwin", "linux")
+  OS = Config::CONFIG['target_os']
+  
+  # Number of bytes taken by a pointer on the Machine.
+  POINTER_SIZE = 1.size
   
   # Allow non-root users to create low-level Ethernet sockets.
   #
@@ -20,7 +21,7 @@ module Provisioning
   # Returns true for success, false otherwise. If the call fails, it is most
   # likely because it is not run by root / Administrator.
   def self.usermode_sockets
-    case platform
+    case OS
     when /darwin/
       return false unless Kernel.system("chmod o+rw /dev/bpf*")
     when /linux/

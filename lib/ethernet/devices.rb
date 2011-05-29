@@ -15,18 +15,7 @@ module Devices
   # Args:
   #   eth_device:: device name for the Ethernet card, e.g. 'eth0'
   def self.mac(eth_device)
-    case Ethernet::Provisioning.platform
-    when /linux/
-      # structure ifreq in /usr/include/net/if.h
-      ifreq = [eth_device].pack 'a32'
-      # 0x8927 is SIOCGIFHWADDR in /usr/include/bits/ioctls.h
-      ioctls_socket.ioctl 0x8927, ifreq
-      ifreq[18, 6]
-    when /darwin/
-      info[eth_device][:mac]
-    else
-      raise "Unsupported os #{Ethernet::Provisioning.platform}"
-    end
+    info[eth_device][:mac]
   end
   
   # The interface number for an Ethernet interface.
@@ -34,101 +23,84 @@ module Devices
   # Args:
   #   eth_device:: device name for the Ethernet card, e.g. 'eth0'
   def self.interface_index(eth_device)
-    case Ethernet::Provisioning.platform
-    when /linux/
-      # /usr/include/net/if.h, structure ifreq
-      ifreq = [eth_device].pack 'a32'
-      # 0x8933 is SIOCGIFINDEX in /usr/include/bits/ioctls.h
-      ioctls_socket.ioctl 0x8933, ifreq
-      ifreq[16, 4].unpack('I').first
-    when /darwin/
-      info[eth_device][:index]
-    else
-      raise "Unsupported os #{Ethernet::Provisioning.platform}"
-    end
+    info[eth_device][:index]
   end
   
   # Hash mapping device names to information about devices.
   def self.info
-    case Ethernet::Provisioning.platform
-    when /linux/, /darwin/
-      case Ethernet::Provisioning.platform
-      when /linux/
-        # struct ifreq in /usr/include/net/if.h
-        ifreq_size = FFI::Pointer.size == 8 ? 40 : 32
-        # SIOCGIFCONF in /usr/include/bits/ioctls.h
-        ioctl_num = 0x8912
-        # struct ifconf in /usr/include/net/if.h
-        pack_spec = FFI::Pointer.size == 8 ? 'QQ' : 'LL'
-      when /darwin/
-        # struct ifreq in /usr/include/net/if.h
-        ifreq_size = 32
-        # SIOCGIFCONF in /usr/include/sys/sockio.h
-        # _IOW in /usr/include/sys/ioccom.h
-        ioctl_num = 0xc00c6924
-        # struct ifconf in /usr/include/net/if.h
-        pack_spec = FFI::Pointer.size == 8 ? 'LQ' : 'LL'
+    # array of struct ifreq in /usr/include/net/if.h
+    buffer_size = ifreq_size * 128
+    buffer_ptr = FFI::MemoryPointer.new :char, buffer_size, 0
+    # struct ifconf in /usr/include/net/if.h
+    ifconf = [buffer_size, buffer_ptr.address].pack ifconf_packspec
+    ioctl_socket.ioctl siocgifconf_ioctl, ifconf
+    
+    output_size = ifconf.unpack('l').first
+    offset = 0
+    devices = {}
+    while offset < output_size
+      name = (buffer_ptr + offset).read_string_to_null
+      devices[name] ||= {}
+      # struct sockaddr
+      addr_length = [(buffer_ptr + offset + 16).read_uchar,
+                     ifreq_size - 16].max
+      addr_family = (buffer_ptr + offset + 17).read_uchar
+      if addr_family == ll_address_family
+        # struct sockaddr_dl in /usr/include/net/if_dl.h
+        devices[name][:index] = (buffer_ptr + offset + 18).read_ushort
+        skip = (buffer_ptr + offset + 21).read_uchar
+        length = (buffer_ptr + offset + 22).read_uchar
+        devices[name][:mac] =
+            (buffer_ptr + offset + 24 + skip).read_string(length)
       end
       
-      # array of struct ifreq in /usr/include/net/if.h
-      buffer_size = ifreq_size * 128
-      buffer_ptr = FFI::MemoryPointer.new :char, buffer_size, 0
-      # struct ifconf in /usr/include/net/if.h
-      ifconf = [buffer_size, buffer_ptr.address].pack pack_spec
-      Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0).ioctl ioctl_num, ifconf
-      
-      output_size = ifconf.unpack('l').first
-      offset = 0
-      devices = {}
-      while offset < output_size
-        name = (buffer_ptr + offset).read_string_to_null
-        devices[name] ||= {}
-        # struct sockaddr
-        addr_length = [(buffer_ptr + offset + 16).read_uchar,
-                       ifreq_size - 16].max
-        addr_family = (buffer_ptr + offset + 17).read_uchar
-        if addr_family == ll_address_family
-          # struct sockaddr_dl in /usr/include/net/if_dl.h
-          devices[name][:index] = (buffer_ptr + offset + 18).read_ushort
-          skip = (buffer_ptr + offset + 21).read_uchar
-          length = (buffer_ptr + offset + 22).read_uchar
-          devices[name][:mac] =
-              (buffer_ptr + offset + 24 + skip).read_string(length)
-        end
-        
-        offset += 16 + addr_length
-      end
-      
-      if /linux/ =~ Ethernet::Provisioning.platform
-        # Linux only provides IP addresses in SIOCGIFCONF.
-        devices.keys.each do |device|
-          devices[device][:mac] ||= mac device
-          devices[device][:index] ||= interface_index device
-        end
-      end
-      devices.delete_if { |k, v| v[:mac].nil? || v[:mac].empty? }
-      
-      devices
-    else
-      raise "Unsupported os #{Ethernet::Provisioning.platform}"
+      offset += 16 + addr_length
     end
-  end
-
-  # The link layer address number for raw sockets. 
-  def self.ll_address_family
-    case Ethernet::Provisioning.platform
-    when /linux/
-      16  # cat /usr/include/bits/socket.h | grep PF_NETLINK
-    when /darwin/
-      18  # cat /usr/include/sys/socket.h | grep AF_PACKET
-    else
-      raise "Unsupported os #{Ethernet::Provisioning.platform}"
+    
+    if devices.all? { |k, v| v[:mac].nil? }
+      # Linux only provides IP addresses in SIOCGIFCONF.
+      devices.keys.each do |device|
+        devices[device][:mac] ||= mac device
+        devices[device][:index] ||= interface_index device
+      end
     end
+    devices.delete_if { |k, v| v[:mac].nil? || v[:mac].empty? }
+    
+    devices
   end
   
-  # Socket that is solely used for issuing ioctls.
-  def self.ioctls_socket
-    Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
+  class <<self
+    # SIOCGIFCONF ioctl number.
+    def siocgifconf_ioctl
+      raise "Unsupported os #{Ethernet::Provisioning::OS}"
+    end
+    
+    
+    # Array#pack specification for struct ifconf.
+    #
+    # The specification converts a [size, pointer] array into a valid struct.
+    def ifconf_packspec
+      raise "Unsupported os #{Ethernet::Provisioning::OS}"
+    end
+    private :ifconf_packspec
+    
+    # Size of a struct ifreq.
+    def ifreq_size
+      raise "Unsupported os #{Ethernet::Provisioning::OS}"
+    end
+    private :ifreq_size
+    
+    # The link layer address number for raw sockets. 
+    def ll_address_family
+      raise "Unsupported os #{Ethernet::Provisioning::OS}"
+    end
+    private :ll_address_family
+  
+    # Socket that is solely used for issuing ioctls.
+    def ioctl_socket
+      Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
+    end
+    private :ioctl_socket
   end
 end  # class Ethernet::Devices
 

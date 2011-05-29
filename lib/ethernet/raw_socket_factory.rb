@@ -12,7 +12,7 @@ module RawSocketFactory
   #   ether_type:: only receive Ethernet frames with this protocol number
   def self.socket(eth_device, ether_type = nil)
     # This method is redefined in platform-specific implementations.
-    raise "Unsupported os #{Ethernet::Provisioning.platform}"
+    raise "Unsupported os #{Ethernet::Provisioning::OS}"
   end
 
   class <<self

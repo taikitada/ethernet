@@ -42,9 +42,11 @@ require 'ethernet/devices.rb'
 require 'ethernet/frame_socket.rb'
 require 'ethernet/provisioning.rb'
 require 'ethernet/raw_socket_factory.rb'
-case Ethernet::Provisioning.platform
-when /linux/
-  require 'ethernet/raw_socket_factory_linux.rb'
+case Ethernet::Provisioning::OS
 when /darwin/
+  require 'ethernet/devices_darwin.rb'
   require 'ethernet/raw_socket_factory_darwin.rb'
+when /linux/
+  require 'ethernet/devices_linux.rb'
+  require 'ethernet/raw_socket_factory_linux.rb'
 end

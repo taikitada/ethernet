@@ -16,7 +16,7 @@ describe Ethernet do
       Ethernet.devices.should == golden
     end
     
-    let (:devices) { Ethernet.devices }
+    let(:devices) { Ethernet.devices }
     
     it 'contains at least one device' do
       devices.keys.should have_at_least(1).name

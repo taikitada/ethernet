@@ -17,7 +17,7 @@ module Devices
   def self.mac(eth_device)
     case RUBY_PLATFORM
     when /linux/
-      # /usr/include/net/if.h, structure ifreq
+      # structure ifreq in /usr/include/net/if.h
       ifreq = [eth_device].pack 'a32'
       # 0x8927 is SIOCGIFHWADDR in /usr/include/bits/ioctls.h
       RawSocketFactory.socket.ioctl 0x8927, ifreq
@@ -72,7 +72,7 @@ module Devices
       buffer_ptr = FFI::MemoryPointer.new :char, buffer_size, 0
       # struct ifconf in /usr/include/net/if.h
       ifconf = [buffer_size, buffer_ptr.address].pack pack_spec
-      RawSocketFactory.socket.ioctl ioctl_num, ifconf
+      Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0).ioctl ioctl_num, ifconf
       
       output_size = ifconf.unpack('l').first
       offset = 0

@@ -17,7 +17,7 @@ module Provisioning
   def self.usermode_sockets
     case RUBY_PLATFORM
     when /darwin/
-      return false unless Kernel.system("chmod o+r /dev/bpf*")
+      return false unless Kernel.system("chmod o+rw /dev/bpf*")
     when /linux/
       ruby = File.join Config::CONFIG['bindir'],
                        Config::CONFIG['ruby_install_name']

@@ -5,6 +5,7 @@ describe Ethernet::FrameSocket do
   let(:eth_type) { 0x0800 }
   let(:mac) { Ethernet::Devices.mac eth_device }
   let(:dest_mac) { "\x00\x11\x22\x33\x44\x55" }
+  let(:wrong_mac) { "\x02\x11\x22\x33\x44\x55" }
   let(:bcast_mac) { "\xff" * 6 }
   
   shared_examples_for 'a real socket' do
@@ -38,7 +39,7 @@ describe Ethernet::FrameSocket do
     let(:socket_stub) do
       RawSocketStub.new([
         [mac, dest_mac, "\x88\xB7", 'Wrong Ethernet type'].join,
-        [bcast_mac, dest_mac, [eth_type].pack('n'), 'Wrong dest MAC'].join,
+        [wrong_mac, dest_mac, [eth_type].pack('n'), 'Wrong dest MAC'].join,
         [mac, bcast_mac, [eth_type].pack('n'), 'Bcast'].join,
         [mac, dest_mac, [eth_type].pack('n'), 'Correct'].join,
       ])

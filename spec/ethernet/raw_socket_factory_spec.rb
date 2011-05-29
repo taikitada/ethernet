@@ -20,7 +20,7 @@ describe Ethernet::RawSocketFactory do
     end
 
     it 'should receive some network noise' do
-      @socket.recv(8192).should_not be_empty
+      @socket.recv(4096).should_not be_empty
     end
   end
 end

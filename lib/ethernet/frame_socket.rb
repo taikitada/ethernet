@@ -85,7 +85,7 @@ class FrameSocket
   #
   # This will discard incoming frames that don't match the MAC address that the
   # socket is connected to, or the Ethernet packet type.
-  def recv(buffer_size = 8192)
+  def recv(buffer_size = 4096)
     raise "Not connected" unless @dest_mac
     loop do
       data, mac_address = recv_from buffer_size
@@ -103,11 +103,12 @@ class FrameSocket
   #
   # This will discard incoming frames that don't match the MAC address that the
   # socket is connected to, or the Ethernet packet type.
-  def recv_from(buffer_size = 8192)
+  def recv_from(buffer_size = 4096)
     loop do
       packet = @socket.recv buffer_size
       next unless packet[12, 2] == @ether_type
-      next unless packet[0, 6] == @source_mac
+      # The last part of the condition accepts multicast packets.
+      next if packet[0, 6] != @source_mac && packet.unpack('C').first & 1 == 0
       return packet[14..-1], packet[6, 6]
     end
   end

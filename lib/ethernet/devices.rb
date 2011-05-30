@@ -30,7 +30,7 @@ module Devices
   def self.info
     # array of struct ifreq in /usr/include/net/if.h
     buffer_size = ifreq_size * 128
-    buffer_ptr = FFI::MemoryPointer.new :char, buffer_size, 0
+    buffer_ptr = FFI::MemoryPointer.new :uchar, buffer_size, 0
     # struct ifconf in /usr/include/net/if.h
     ifconf = [buffer_size, buffer_ptr.address].pack ifconf_packspec
     ioctl_socket.ioctl siocgifconf_ioctl, ifconf
@@ -42,14 +42,13 @@ module Devices
       name = (buffer_ptr + offset).read_string_to_null
       devices[name] ||= {}
       # struct sockaddr
-      addr_length = [(buffer_ptr + offset + 16).read_uchar,
-                     ifreq_size - 16].max
-      addr_family = (buffer_ptr + offset + 17).read_uchar
+      addr_length, addr_family = *(buffer_ptr + offset + 16).read_string(2).
+                                                             unpack('CC')
+      addr_length = ifreq_size - 16 if addr_length < ifreq_size - 16
       if addr_family == ll_address_family
         # struct sockaddr_dl in /usr/include/net/if_dl.h
-        devices[name][:index] = (buffer_ptr + offset + 18).read_ushort
-        skip = (buffer_ptr + offset + 21).read_uchar
-        length = (buffer_ptr + offset + 22).read_uchar
+        devices[name][:index], blah, skip, length =
+            *(buffer_ptr + offset + 18).read_string(4).unpack('SCCC')
         devices[name][:mac] =
             (buffer_ptr + offset + 24 + skip).read_string(length)
       end

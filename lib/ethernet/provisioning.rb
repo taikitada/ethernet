@@ -23,11 +23,11 @@ module Provisioning
   def self.usermode_sockets
     case OS
     when /darwin/
-      return false unless Kernel.system("chmod o+rw /dev/bpf*")
+      return false unless Kernel.system("sudo chmod o+rw /dev/bpf*")
     when /linux/
       ruby = File.join Config::CONFIG['bindir'],
                        Config::CONFIG['ruby_install_name']
-      unless Kernel.system("setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' #{ruby}")
+      unless Kernel.system("sudo setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' #{ruby}")
         return false
       end
       
@@ -35,7 +35,7 @@ module Provisioning
       # No big deal if this fails.
       dumpcap = '/usr/bin/dumpcap'
       if File.exist? dumpcap
-        Kernel.system("setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' #{dumpcap}")
+        Kernel.system("sudo setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' #{dumpcap}")
       end
     when /win/
       # NOTE: this might not work

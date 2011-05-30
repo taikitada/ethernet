@@ -1,5 +1,3 @@
-require 'ffi'
-
 # :nodoc: namespace
 module Ethernet
 

@@ -38,6 +38,10 @@ module Ethernet
   end
 end
 
+unless defined? Rubinius  # ffi is in the standard library in Rubinius
+  require 'ffi'
+end
+
 require 'ethernet/devices.rb'
 require 'ethernet/frame_socket.rb'
 require 'ethernet/provisioning.rb'

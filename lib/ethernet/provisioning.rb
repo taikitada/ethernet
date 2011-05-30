@@ -1,6 +1,5 @@
 require 'rbconfig'
 
-
 # :nodoc: namespace
 module Ethernet
 

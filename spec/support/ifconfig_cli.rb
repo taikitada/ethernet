@@ -1,3 +1,5 @@
+# Encoding: ASCII-8BIT
+
 require 'English'
 
 # Wraps ifconfig calls useful for testing.

@@ -1,3 +1,5 @@
+# Encoding: ASCII-8BIT
+
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
 describe Ethernet::Devices do

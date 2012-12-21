@@ -15,7 +15,7 @@ module RawSocketFactory
     set_bpf_eth_device bpf, eth_device, ether_type
     Ethernet::RawSocketFactory::BpfSocketWrapper.new bpf
   end
-  
+
   class <<self
     # Returns a BPF file descriptor that acts almost like a link-layer socket.
     #
@@ -36,7 +36,7 @@ module RawSocketFactory
       return nil
     end
     private :bpf_pseudo_socket
-    
+
     # Binds a BPF file descriptor to a device and limits packet capture.
     #
     # BPF means Berkeley Packet Filter, and works on FreeBSD-like kernels,
@@ -49,22 +49,22 @@ module RawSocketFactory
       # _IOW in /usr/include/sys/ioccom.h
       # struct ifreq in /usr/include/net/if.h
       bpf.ioctl 0x8020426C, [eth_device].pack('a32')
-      
+
       # Receive packets as soon as they're available.
       # BIOCIMMEDIATE in /usr/include/net/bpf.h
       # _IOW in /usr/include/sys/ioccom.h
       bpf.ioctl 0x80044270, [1].pack('L')
-      
+
       # Don't automatically set the Ethernet header.
       # BIOCSHDRCMPLT in /usr/include/net/bpf.h
       # _IOW in /usr/include/sys/ioccom.h
       bpf.ioctl 0x80044275, [1].pack('L')
-      
+
       # Don't receive the packets that we sent ourselves.
       # BIOCSSEESENT in /usr/include/net/bpf.h
       # _IOW in /usr/include/sys/ioccom.h
       bpf.ioctl 0x80044275, [0].pack('L')
-      
+
       # BPF filter programming constants in /usr/include/net/bpf.h
       if ether_type
         filter = [
@@ -78,14 +78,14 @@ module RawSocketFactory
       else
         filter = []
       end
-      
+
       ether_mac = Ethernet::Devices.mac eth_device
       filter += [
         # A <- first byte of destination MAC address
         [0x30, 0, 0, 0],  # BPF_LD + BPF_B + BPF_ABS
         # if A & 1 (multicast MAC address) jump above exact MAC match
         [0x45, 5, 0, 1],   # BPF_JMP + BPF_JSET + BPF_K
-        
+
         # A <- first 4 bytes of destination MAC addres
         [0x20, 0, 0, 0],  # BPF_LD + BPF_W + BPF_ABS
         # if A != first 4 bytes of local MAC address jump to drop instruction
@@ -124,19 +124,24 @@ end  # module Ethernet::RawSocketFactory
 # :nodoc: namespace
 module RawSocketFactory
 
-# Wraps a BPF file descriptor into a socket-like interface.  
+# Wraps a BPF file descriptor into a socket-like interface.
 class BpfSocketWrapper
   # Creates a wrapper for a BPF file descriptor.
   def initialize(bpf)
     @bpf = bpf
+    puts @bpf
     @read_size = read_buffer_length
+    puts '@read_size' ,@read_size
     @queue = []
   end
-  
+
   # Implements Socket#recv.
   def recv(buffer_size)
     while @queue.empty?
+      puts 'in while'
       read_buffer = @bpf.sysread @read_size
+      p read_buffer
+      p read_buffer.unpack("H*")
       bytes_read = read_buffer.length
       offset = 0
       while offset < bytes_read
@@ -150,12 +155,15 @@ class BpfSocketWrapper
     end
     @queue.shift
   end
-  
+
+  def show_queue
+    puts @queue
+  end
   # Implements Socket#send.
   def send(buffer, flags)
     @bpf.write buffer
   end
-  
+
   # Implements Socket#close.
   def close
     @bpf.close

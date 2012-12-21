@@ -1,15 +1,25 @@
+# how to run
+# sudo ruby receive_packet.rb en0 0800
+#
 require './ethernet'
 
 class Receiver_LLPacket
 	include Ethernet
 
-	def receive_LL_Packet(eth_device, ether_type)
+	def initialize(eth_device, ether_type)
 		ether_type = [ether_type].pack('H*').unpack('n').first
 		puts ether_type
 		socket = Ethernet.raw_socket(eth_device, ether_type)
-		puts 'made socket'
+		socket.recv(8172)
+		#puts socket.show_queue
 	end
+
+	def recv_packet(buffer_size=8172)
+		puts buffer_size
+		puts 'recv_packet'
+	end
+
 end
 puts 'made socket'
-RLL = Receiver_LLPacket.new
-RLL.receive_LL_Packet(ARGV[0], ARGV[1])
+RLL = Receiver_LLPacket.new ARGV[0], ARGV[1]
+RLL.recv_packet(10000)

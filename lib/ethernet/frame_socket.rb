@@ -16,7 +16,7 @@ class FrameSocket
   #   RuntimeError:: if mac isn't exactly 6-bytes long
   def initialize(raw_socket_or_device, ether_type, mac_address = nil)
     check_mac mac_address if mac_address
-    
+
     if raw_socket_or_device.respond_to? :to_str
       @source_mac = mac_address || Ethernet::Devices.mac(raw_socket_or_device)
       @socket = RawSocketFactory.socket raw_socket_or_device, ether_type
@@ -25,7 +25,7 @@ class FrameSocket
       @source_mac = mac_address.dup
       @socket = raw_socket_or_device
     end
-    
+
     @dest_mac = nil
     @ether_type = [ether_type].pack('n')
   end
@@ -41,12 +41,12 @@ class FrameSocket
     check_mac mac_address
     @dest_mac = mac_address
   end
-  
+
   # Closes the underlying socket.
   def close
     @socket.close
   end
-  
+
   # Sends an Ethernet II frame.
   #
   # Args:
@@ -58,7 +58,7 @@ class FrameSocket
     raise "Not connected" unless @dest_mac
     send_to @dest_mac, data, send_flags
   end
-  
+
   # Sends an Ethernet II frame.
   #
   # Args:
@@ -74,7 +74,7 @@ class FrameSocket
     packet = [mac_address, @source_mac, @ether_type, data, padding].join
     @socket.send packet, send_flags
   end
-  
+
   # Receives an Ethernet II frame.
   #
   # Args:
@@ -92,7 +92,7 @@ class FrameSocket
       return data if @dest_mac == mac_address
     end
   end
-  
+
   # Receives an Ethernet II frame.
   #
   # Args:
@@ -112,7 +112,7 @@ class FrameSocket
       return packet[14..-1], packet[6, 6]
     end
   end
-  
+
   # Raises an exception if the given MAC address is invalid.
   def check_mac(mac_address)
     raise "Invalid MAC address" unless mac_address.length == 6

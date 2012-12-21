@@ -6,11 +6,11 @@ module Ethernet
 # Setup issues such as assigning permissions for Ethernet-level transmission.
 module Provisioning
   # The kernel that the VM is running on (e.g. "darwin", "linux")
-  OS = Config::CONFIG['target_os']
-  
+  OS = RbConfig::CONFIG['target_os']
+
   # Number of bytes taken by a pointer on the Machine.
   POINTER_SIZE = 1.size
-  
+
   # Allow non-root users to create low-level Ethernet sockets.
   #
   # This is a security risk, because Ethernet sockets can be used to spy on all
@@ -29,7 +29,7 @@ module Provisioning
       unless Kernel.system("sudo setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' #{ruby}")
         return false
       end
-      
+
       # Try to enable Wireshark packet capture for debugging.
       # No big deal if this fails.
       dumpcap = '/usr/bin/dumpcap'

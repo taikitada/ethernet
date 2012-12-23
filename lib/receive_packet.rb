@@ -10,8 +10,11 @@ class Receiver_LLPacket
 		ether_type = [ether_type].pack('H*').unpack('n').first
 		puts ether_type
 		socket = Ethernet.raw_socket(eth_device, ether_type)
-		socket.recv(8172)
-		#puts socket.show_queue
+		while true
+			socket.recv(8172)
+			socket.show_queue
+			print "1"
+		end
 	end
 
 	def recv_packet(buffer_size=8172)
@@ -22,4 +25,6 @@ class Receiver_LLPacket
 end
 puts 'made socket'
 RLL = Receiver_LLPacket.new ARGV[0], ARGV[1]
+ether_type = [ARGV[1]].pack('H*').unpack('n').first
+RS = Ethernet::RawSocketFactory.socket ARGV[0], ether_type
 RLL.recv_packet(10000)

@@ -141,13 +141,17 @@ class BpfSocketWrapper
       puts 'in while'
       read_buffer = @bpf.sysread @read_size
       p read_buffer
-      p read_buffer.unpack("H*")
+      p (read_buffer).unpack("H*")
+      hoge = read_buffer.unpack("H36H12H12H4H*")
+      p (hoge[1]).unpack("a2"*6)
+      p (hoge[2]).unpack("a2"*6)
       bytes_read = read_buffer.length
       offset = 0
       while offset < bytes_read
         # struct bpf_hdr in /usr/include/net/bpf.h
-        timestamp, captured_size, original_size, header_size =
-            *read_buffer.unpack('QLLS')
+        timestamp, captured_size, original_size, header_size, dst_mac, src_mac, ether_type=
+            *read_buffer.unpack('QLLSH12H12H4')
+        puts timestamp, captured_size, original_size, header_size, dst_mac, src_mac, ether_type
         @queue.push read_buffer[header_size, captured_size]
         # BPF_WORDALIGN in /usr/include/net/bpf.h
         offset += (header_size + captured_size + 3) & 0xFFF4
@@ -157,7 +161,6 @@ class BpfSocketWrapper
   end
 
   def show_queue
-    puts @queue
   end
   # Implements Socket#send.
   def send(buffer, flags)

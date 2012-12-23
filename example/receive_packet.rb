@@ -1,7 +1,8 @@
 # how to run
 # sudo ruby receive_packet.rb en0 0800
 #
-require File.expand_path(File.dirname(__FILE__) +  '../lib/ethernet'
+$LOAD_PATH << File.dirname(File.dirname(__FILE__))
+require '../lib/ethernet'
 
 class Receiver_LLPacket
 	include Ethernet

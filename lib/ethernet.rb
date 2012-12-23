@@ -42,15 +42,15 @@ unless defined? Rubinius  # ffi is in the standard library in Rubinius
   require 'ffi'
 end
 
-require './ethernet/devices.rb'
-require './ethernet/frame_socket.rb'
-require './ethernet/provisioning.rb'
-require './ethernet/raw_socket_factory.rb'
+require '../lib/ethernet/devices.rb'
+require '../lib/ethernet/frame_socket.rb'
+require '../lib/ethernet/provisioning.rb'
+require '../lib/ethernet/raw_socket_factory.rb'
 case Ethernet::Provisioning::OS
 when /darwin/
-  require './ethernet/devices_darwin.rb'
-  require './ethernet/raw_socket_factory_darwin.rb'
+  require '../lib/ethernet/devices_darwin.rb'
+  require '../lib/ethernet/raw_socket_factory_darwin.rb'
 when /linux/
-  require './ethernet/devices_linux.rb'
-  require './ethernet/raw_socket_factory_linux.rb'
+  require '../lib/ethernet/devices_linux.rb'
+  require '../lib/ethernet/raw_socket_factory_linux.rb'
 end

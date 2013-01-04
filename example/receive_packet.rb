@@ -25,7 +25,14 @@ class Receiver_LLPacket
 
 end
 puts 'made socket'
-RLL = Receiver_LLPacket.new ARGV[0], ARGV[1]
+#RLL = Receiver_LLPacket.new ARGV[0], ARGV[1]
 ether_type = [ARGV[1]].pack('H*').unpack('n').first
-RS = Ethernet::RawSocketFactory.socket ARGV[0], ether_type
-RLL.recv_packet(10000)
+RS = Ethernet.raw_socket ARGV[0], ether_type
+#RLL.recv_packet(10000)
+hoge = RS.recv(8000)
+count = 0
+while true
+	puts (hoge.unpack("H12H12"))[1]
+	puts count
+	count += 1
+end

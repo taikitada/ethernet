@@ -138,10 +138,8 @@ class BpfSocketWrapper
   # Implements Socket#recv.
   def recv(buffer_size)
     while @queue.empty?
-      puts 'in while'
       read_buffer = @bpf.sysread @read_size
-      p read_buffer
-      p read_buffer.unpack("H*")
+      #p read_buffer.unpack("H*")
       bytes_read = read_buffer.length
       offset = 0
       while offset < bytes_read
@@ -153,7 +151,7 @@ class BpfSocketWrapper
         offset += (header_size + captured_size + 3) & 0xFFF4
       end
     end
-    @queue.shift
+    (@queue.shift).unpack("H*")
   end
 
   def show_queue
